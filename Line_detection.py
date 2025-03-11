@@ -73,6 +73,38 @@ def save_coordinates_to_svg(coordinates, filename):
     # Speichere den SVG-Inhalt in einer Datei
     with open(filename, 'w') as f:
         f.write(svg_content)
+def save_coordinates_to_gcode(coordinates, filename):
+    with open(filename, 'w') as f:
+        f.write("G21 ; Setze Einheiten auf Millimeter\n")
+        f.write("G90 ; Absolute Positionierung\n")
+        f.write("G28 ; Referenzfahrt\n")
+
+        if coordinates:
+            # Gehe zur ersten Position ohne zu zeichnen
+            f.write(f"G0 X{coordinates[0][0]} Y{coordinates[0][1]}\n")
+
+            # Zeichne Linien zwischen den Punkten
+            for x, y in coordinates[1:]:
+                f.write(f"G1 X{x} Y{y} F1000 ; Bewege mit Vorschubgeschwindigkeit\n")
+
+        f.write("G0 X0 Y0 ; Zurück zur Startposition\n")
+        f.write("M30 ; Programmende\n")
+
+
+def lines_to_gcode(lines, scale=1.0):
+    gcode = ["G21 ; Set units to mm", "G90 ; Absolute positioning"]
+
+    for i, (x1, y1, x2, y2) in enumerate(lines):
+        x1, y1, x2, y2 = x1 * scale, y1 * scale, x2 * scale, y2 * scale
+
+        if i == 0:
+            gcode.append(f"G0 X{x1:.2f} Y{y1:.2f} ; Move to start")
+        gcode.append(f"G1 X{x2:.2f} Y{y2:.2f} F1000 ; Draw line")
+
+    gcode.append("G0 X0 Y0 ; Move back to origin")
+
+    return gcode
+
 
 # Zugriff auf die Webcam
 cap = cv2.VideoCapture(0)
@@ -116,6 +148,14 @@ while True:
         # Speichere die Koordinaten in einer SVG-Datei
         save_coordinates_to_svg(coordinates, 'coordinates.svg')
         print("Koordinaten gespeichert in: coordinsates.svg")
+
+        save_coordinates_to_gcode(coordinates, 'coordinates.gcode')
+        print("Koordinaten gespecihert in: coordinates.gcode")
+
+
+
+# Beispielaufruf:
+# save_coordinates_to_gcode(coordinates, 'drawing.gcode')
 
 # Ressourcen freigeben
 cap.release()
