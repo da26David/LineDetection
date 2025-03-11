@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
-
-#Externe Speicher klasse
-from Saver import Saver
-
+from Saver import Saver  # Externe Klasse zum Speichern von Koordinaten
 
 # Funktion zum Erkennen der schwarzen Zeichnung auf einem weißen Blatt
 def detect_drawing(frame):
@@ -30,8 +27,11 @@ def extract_coordinates(cleaned_image):
     for contour in contours:
         for point in contour:
             coordinates.append(tuple(point[0]))
+        # Trennungssignal (Stift heben)
+        coordinates.append(None)
 
     return coordinates
+
 
 # Zugriff auf die Webcam
 cap = cv2.VideoCapture(1)
